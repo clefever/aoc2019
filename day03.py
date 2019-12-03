@@ -1,7 +1,12 @@
 import adventofcode
-from collections import defaultdict
 
-# TODO: Refactor horrible code
+
+class Coordinate:
+    def __init__(self, x, y, wire_num, steps):
+        self.x = x
+        self.y = y
+        self.wire_flags = 1 << (wire_num - 1)
+        self.steps = {wire_num: steps}
 
 
 def intersect_distance(wire1, wire2):
@@ -13,42 +18,9 @@ def intersect_distance(wire1, wire2):
     >>> intersect_distance(['R98', 'U47', 'R26', 'D63', 'R33', 'U87', 'L62', 'D20', 'R33', 'U53', 'R51'], ['U98', 'R91', 'D20', 'R16', 'D67', 'R40', 'U7', 'R15', 'U6', 'R7'])
     135
     """
-    map = defaultdict(lambda: 0)
-    num = 0
-    for wire in [wire1, wire2]:
-        loc = (0, 0)
-        num += 1
-        for seg in wire:
-            dist = int(seg[1:])
-            if seg[0] == "U":
-                for y in range(loc[1]+1, loc[1]+dist+1):
-                    map[(loc[0], y)] |= num
-                loc = (loc[0], loc[1]+dist)
-            if seg[0] == "D":
-                for y in range(loc[1]-1, loc[1]-dist-1, -1):
-                    map[(loc[0], y)] |= num
-                loc = (loc[0], loc[1]-dist)
-            if seg[0] == "R":
-                for x in range(loc[0]+1, loc[0]+dist+1):
-                    map[(x, loc[1])] |= num
-                loc = (loc[0]+dist, loc[1])
-            if seg[0] == "L":
-                for x in range(loc[0]-1, loc[0]-dist-1, -1):
-                    map[(x, loc[1])] |= num
-                loc = (loc[0]-dist, loc[1])
-
-    coords = []
-
-    for coord in map:
-        if map[coord] == 3:
-            coords.append(coord)
-
-    min = 9999999
-    for coord in coords:
-        if abs(coord[0]) + abs(coord[1]) < min:
-            min = abs(coord[0]) + abs(coord[1])
-
-    return min
+    coords = intersections(wire1, wire2)
+    min_coord = min(coords, key=lambda coord: abs(coord.x) + abs(coord.y))
+    return abs(min_coord.x) + abs(min_coord.y)
 
 
 def intersect_min_steps(wire1, wire2):
@@ -60,63 +32,52 @@ def intersect_min_steps(wire1, wire2):
     >>> intersect_min_steps(['R98', 'U47', 'R26', 'D63', 'R33', 'U87', 'L62', 'D20', 'R33', 'U53', 'R51'], ['U98', 'R91', 'D20', 'R16', 'D67', 'R40', 'U7', 'R15', 'U6', 'R7'])
     410
     """
-    map = defaultdict(lambda: (0, 0, 0))
-    num = 0
+    coords = intersections(wire1, wire2)
+    min_coord = min(coords, key=lambda coord: coord.steps[1] + coord.steps[2])
+    return min_coord.steps[1] + min_coord.steps[2]
+
+
+def intersections(wire1, wire2):
+    coord_dict = {}
+    wire_num = 0
     for wire in [wire1, wire2]:
-        loc = (0, 0)
-        num += 1
+        curr_coord = Coordinate(0, 0, 1, 0)
+        wire_num += 1
         step = 0
         for seg in wire:
-            dist = int(seg[1:])
-            if seg[0] == "U":
-                for y in range(loc[1]+1, loc[1]+dist+1):
-                    step += 1
-                    step_t = map[(loc[0], y)]
-                    if num == 1 and (step < step_t[0] or step_t[0] == 0):
-                        map[(loc[0], y)] = (step, step_t[1], step_t[2] | num)
-                    if num == 2 and (step < step_t[1] or step_t[1] == 0):
-                        map[(loc[0], y)] = (step_t[0], step, step_t[2] | num)
-                loc = (loc[0], loc[1]+dist)
-            if seg[0] == "D":
-                for y in range(loc[1]-1, loc[1]-dist-1, -1):
-                    step += 1
-                    step_t = map[(loc[0], y)]
-                    if num == 1 and (step < step_t[0] or step_t[0] == 0):
-                        map[(loc[0], y)] = (step, step_t[1], step_t[2] | num)
-                    if num == 2 and (step < step_t[1] or step_t[1] == 0):
-                        map[(loc[0], y)] = (step_t[0], step, step_t[2] | num)
-                loc = (loc[0], loc[1]-dist)
-            if seg[0] == "R":
-                for x in range(loc[0]+1, loc[0]+dist+1):
-                    step += 1
-                    step_t = map[(x, loc[1])]
-                    if num == 1 and (step < step_t[0] or step_t[0] == 0):
-                        map[(x, loc[1])] = (step, step_t[1], step_t[2] | num)
-                    if num == 2 and (step < step_t[1] or step_t[1] == 0):
-                        map[(x, loc[1])] = (step_t[0], step, step_t[2] | num)
-                loc = (loc[0]+dist, loc[1])
-            if seg[0] == "L":
-                for x in range(loc[0]-1, loc[0]-dist-1, -1):
-                    step += 1
-                    step_t = map[(x, loc[1])]
-                    if num == 1 and (step < step_t[0] or step_t[0] == 0):
-                        map[(x, loc[1])] = (step, step_t[1], step_t[2] | num)
-                    if num == 2 and (step < step_t[1] or step_t[1] == 0):
-                        map[(x, loc[1])] = (step_t[0], step, step_t[2] | num)
-                loc = (loc[0]-dist, loc[1])
+            coords = coords_from_segment(seg, curr_coord, wire_num, step)
+            for coord in coords:
+                if (coord.x, coord.y) in coord_dict.keys():
+                    coord_dict[(coord.x, coord.y)].wire_flags |= coord.wire_flags
+                    coord_dict[(coord.x, coord.y)].steps[wire_num] = coord.steps[wire_num]
+                else:
+                    coord_dict[(coord.x, coord.y)] = coord
+            curr_coord = coords[-1]
+            step = curr_coord.steps[wire_num]
 
+    return [coord_dict[coord] for coord in coord_dict if coord_dict[coord].wire_flags == 3]
+
+
+def coords_from_segment(seg, start_coord, wire_num, step):
     coords = []
-
-    for coord in map:
-        if map[coord][2] == 3:
-            coords.append((coord, map[coord]))
-
-    min = 9999999
-    for coord in coords:
-        if coord[1][0] + coord[1][1] < min:
-            min = coord[1][0] + coord[1][1]
-
-    return min
+    dist = int(seg[1:])
+    if seg[0] == "U":
+        for y in range(start_coord.y+1, start_coord.y+dist+1):
+            step += 1
+            coords.append(Coordinate(start_coord.x, y, wire_num, step))
+    elif seg[0] == "D":
+        for y in range(start_coord.y-1, start_coord.y-dist-1, -1):
+            step += 1
+            coords.append(Coordinate(start_coord.x, y, wire_num, step))
+    elif seg[0] == "R":
+        for x in range(start_coord.x+1, start_coord.x+dist+1):
+            step += 1
+            coords.append(Coordinate(x, start_coord.y, wire_num, step))
+    elif seg[0] == "L":
+        for x in range(start_coord.x-1, start_coord.x-dist-1, -1):
+            step += 1
+            coords.append(Coordinate(x, start_coord.y, wire_num, step))
+    return coords
 
 
 def main():
