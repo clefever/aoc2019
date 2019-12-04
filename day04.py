@@ -10,14 +10,9 @@ def is_valid_password_1(password):
     >>> is_valid_password_1("123789")
     False
     """
-    cond1 = False
-    cond2 = False
-    for c in range(len(password)-1):
-        if password[c] == password[c+1]:
-            cond1 = True
-    if int(password[0]) <= int(password[1]) and int(password[1]) <= int(password[2]) and int(password[2]) <= int(password[3]) and int(password[3]) <= int(password[4]) and int(password[4]) <= int(password[5]):
-        cond2 = True
-    return cond1 and cond2
+    has_double = any([password[c] == password[c+1] for c in range(len(password)-1)])
+    is_ascending = all([password[c] <= password[c+1] for c in range(len(password)-1)])
+    return has_double and is_ascending
 
 
 def is_valid_password_2(password):
@@ -29,13 +24,9 @@ def is_valid_password_2(password):
     >>> is_valid_password_2("111122")
     True
     """
-    cond1 = False
-    cond2 = False
-    if (password[0] == password[1] and password[1] != password[2]) or (password[0] != password[1] and password[1] == password[2] and password[2] != password[3]) or (password[1] != password[2] and password[2] == password[3] and password[3] != password[4]) or (password[2] != password[3] and password[3] == password[4] and password[4] != password[5]) or (password[4] == password[5] and password[3] != password[4]):
-        cond1 = True
-    if int(password[0]) <= int(password[1]) and int(password[1]) <= int(password[2]) and int(password[2]) <= int(password[3]) and int(password[3]) <= int(password[4]) and int(password[4]) <= int(password[5]):
-        cond2 = True
-    return cond1 and cond2
+    has_only_double = any(password[c-1] != password[c] and password[c] == password[c+1] and password[c+1] != password[c+2] for c in range(1, len(password)-2)) or (password[0] == password[1] and password[1] != password[2]) or (password[-2] == password[-1] and password[-3] != password[-2])
+    is_ascending = all([password[c] <= password[c+1] for c in range(len(password)-1)])
+    return has_only_double and is_ascending
 
 
 def part1(puzzle_input):
