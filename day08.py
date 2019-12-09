@@ -9,8 +9,10 @@ def part1(puzzle_input, width, height):
     return num_counts[min_zero_layer][1] * num_counts[min_zero_layer][2]
 
 
-def part2(puzzle_input, width, height):
+def part2(puzzle_input, width, height, print_image=False):
     flattened_image = flatten_layers(puzzle_input, width, height)
+    if print_image:
+        print_image_text(flattened_image, width, height)
     return parse_image_text(flattened_image, width)
 
 
@@ -54,12 +56,20 @@ def flatten_layers(image, width, height):
 
 def parse_image_text(flattened_image, width):
     letter_width, letter_height = 5, 6
-    letter_dict = {
-        '111101000011100100001000011110': 'E',
-        '111101000011100100001000010000': 'F',
-        '100101001011110100101001010010': 'H',
-        '100101010011000101001010010010': 'K',
-        '100011000101010001000010000100': 'Y'
+    letter_dict = { # TODO: Fill in missing letter data
+        '011001001010010111101001010010': 'A', '111001001011100100101001011100': 'B',
+        '011001001010000100001001001100': 'C', 'd_text': 'D',
+        '111101000011100100001000011110': 'E', '111101000011100100001000010000': 'F',
+        '011001001010000101101001001110': 'G', '100101001011110100101001010010': 'H',
+        'i_text': 'I', '001100001000010000101001001100': 'J',
+        '100101010011000101001010010010': 'K', '100001000010000100001000011110': 'L',
+        'm_text': 'M', 'n_text': 'N',
+        'o_text': 'O', 'p_text': 'P',
+        'q_text': 'Q', '111001001010010111001010010010': 'R',
+        's_text': 'S', 't_text': 'T',
+        '100101001010010100101001001100': 'U', 'v_text': 'V',
+        'w_text': 'W', 'x_text': 'X',
+        '100011000101010001000010000100': 'Y', '111100001000100010001000011110': 'Z'
     }
     return ''.join(letter_dict[square_string(flattened_image, x, letter_width, letter_height)] for x in range(0, width, letter_width))
 
@@ -68,11 +78,18 @@ def square_string(flattened_image, width_offset, width, height):
     return ''.join([str(flattened_image[y][x]) for y in range(height) for x in range(width_offset, width+width_offset)])
 
 
+def print_image_text(image, width, height):
+    for y in range(height):
+        for x in range(width):
+            print(' ' if image[y][x] == 0 else '#', end=' ')
+        print()
+
+
 def main():
     image_width, image_height = 25, 6
     puzzle_input = adventofcode.read_input(8)
     adventofcode.answer(1, 1572, part1(puzzle_input, image_width, image_height))
-    adventofcode.answer(2, "KYHFE", part2(puzzle_input, image_width, image_height))
+    adventofcode.answer(2, "KYHFE", part2(puzzle_input, image_width, image_height, True))
 
 
 if __name__ == "__main__":
