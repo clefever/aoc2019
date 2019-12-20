@@ -32,7 +32,7 @@ def fuel_required_extra(mass):
 
 
 def sum_of_fuel(puzzle_input, func):
-    return sum([func(int(line)) for line in puzzle_input])
+    return sum(func(int(line)) for line in puzzle_input)
 
 
 def main():

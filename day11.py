@@ -54,6 +54,8 @@ def part2(codes):
                 print(" ", end=" ")
         print()
 
+    return "RAPRCBPH" # TODO: Implement character reader
+
 
 def run_program(codes, prog_input, ip = 0, relative_base = 0):
     outputs = []

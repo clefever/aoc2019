@@ -75,7 +75,7 @@ def parse_image_text(flattened_image, width):
 
 
 def square_string(flattened_image, width_offset, width, height):
-    return ''.join([str(flattened_image[y][x]) for y in range(height) for x in range(width_offset, width+width_offset)])
+    return ''.join(str(flattened_image[y][x]) for y in range(height) for x in range(width_offset, width+width_offset))
 
 
 def print_image_text(image, width, height):
